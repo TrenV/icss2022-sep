@@ -53,4 +53,6 @@ public class Stylerule extends ASTNode {
 	public int hashCode() {
 		return Objects.hash(selectors, body);
 	}
+
 }
+

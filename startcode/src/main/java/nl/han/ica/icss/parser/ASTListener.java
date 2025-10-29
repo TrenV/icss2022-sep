@@ -17,22 +17,26 @@ import nl.han.ica.icss.ast.VariableReference;
  * This class extracts the ICSS Abstract Syntax Tree from the Antlr Parse tree.
  */
 public class ASTListener extends ICSSBaseListener {
-	
+
 	//Accumulator attributes:
 	private AST ast;
 
 	//Use this to keep track of the parent nodes when recursively traversing the ast
 	private IHANStack<ASTNode> currentContainer;
 
+	// Extra stack speciaal voor expressies (zoals literals, var refs, berekeningen)
+	private IHANStack<Expression> exprStack;
+
 	public ASTListener() {
 		ast = new AST();
 		currentContainer = new HANStack<>();
 		currentContainer.push(ast.root);
-
+		exprStack = new HANStack<>();
 	}
-    public AST getAST() {
-        return ast;
-    }
+
+	public AST getAST() {
+		return ast;
+	}
 
 	@Override
 	public void enterStylerule(ICSSParser.StyleruleContext ctx) {
@@ -41,8 +45,16 @@ public class ASTListener extends ICSSBaseListener {
 
 	@Override
 	public void exitStylerule(ICSSParser.StyleruleContext ctx) {
-		Stylerule rule = (Stylerule) currentContainer.pop();
-		currentContainer.peek().addChild(rule);
+		ASTNode node = currentContainer.pop();
+
+		if (node instanceof Stylerule) {
+			Stylerule rule = (Stylerule) node;
+
+			ASTNode parent = currentContainer.peek();
+			parent.addChild(rule);
+		} else {
+			System.err.println("Verwachtte Stylerule maar kreeg: " + node.getClass().getSimpleName());
+		}
 	}
 
 	@Override
@@ -80,16 +92,14 @@ public class ASTListener extends ICSSBaseListener {
 		} else if (t.equalsIgnoreCase("false")) {
 			lit = new BoolLiteral(false);
 		} else {
-			throw new IllegalArgumentException("Onbekende literal: " + t);
+			lit = new ScalarLiteral(Integer.parseInt(t));
 		}
-		currentContainer.push(lit);
+		exprStack.push(lit);
 	}
-
 	@Override
 	public void exitDeclaration(ICSSParser.DeclarationContext ctx) {
-		if (!(currentContainer.peek() instanceof Expression)) return;
-		Expression value = (Expression) currentContainer.pop();
-
+		if (exprStack.isEmpty()) return;
+		Expression value = exprStack.pop();
 		if (!(currentContainer.peek() instanceof Declaration)) return;
 		Declaration decl = (Declaration) currentContainer.pop();
 
@@ -99,15 +109,14 @@ public class ASTListener extends ICSSBaseListener {
 
 	@Override
 	public void exitVariableReference(ICSSParser.VariableReferenceContext ctx) {
-		// Voorbeeld: MyVar
 		VariableReference ref = new VariableReference(ctx.getText());
-		currentContainer.push(ref); // zodat declaration/assignment hem kan oppakken
+		exprStack.push(ref);
 	}
+
 	@Override
 	public void exitVariableAssignment(ICSSParser.VariableAssignmentContext ctx) {
-		Expression value = null;
-		if (currentContainer.peek() instanceof Expression) {
-			value = (Expression) currentContainer.pop();
+		Expression value = exprStack.isEmpty() ? null : exprStack.pop();		if (!exprStack.isEmpty()) {
+			value = exprStack.pop();
 		}
 
 		VariableAssignment assign = new VariableAssignment();
@@ -115,5 +124,38 @@ public class ASTListener extends ICSSBaseListener {
 		assign.expression = value;
 
 		currentContainer.peek().addChild(assign);
+	}
+
+	@Override
+	public void exitAddExpr(ICSSParser.AddExprContext ctx) {
+		if (exprStack.size() < 2) return;
+		Expression right = exprStack.pop();
+		Expression left = exprStack.pop();
+		AddOperation op = new AddOperation();
+		op.lhs = left;
+		op.rhs = right;
+		exprStack.push(op);
+	}
+
+	@Override
+	public void exitSubExpr(ICSSParser.SubExprContext ctx) {
+		if (exprStack.size() < 2) return;
+		Expression right = exprStack.pop();
+		Expression left = exprStack.pop();
+		SubtractOperation op = new SubtractOperation();
+		op.lhs = left;
+		op.rhs = right;
+		exprStack.push(op);
+	}
+
+	@Override
+	public void exitMulExpr(ICSSParser.MulExprContext ctx) {
+		if (exprStack.size() < 2) return;
+		Expression right = exprStack.pop();
+		Expression left = exprStack.pop();
+		MultiplyOperation op = new MultiplyOperation();
+		op.lhs = left;
+		op.rhs = right;
+		exprStack.push(op);
 	}
 }

@@ -18,4 +18,7 @@ public interface IHANStack<T> {
      * @return value at the top of the stack
      */
     T peek();
+
+    boolean isEmpty();
+    int size();
 }

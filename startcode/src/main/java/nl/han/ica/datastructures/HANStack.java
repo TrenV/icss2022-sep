@@ -7,7 +7,6 @@ public class HANStack<T> implements IHANStack<T> {
 
     private final ArrayDeque<T> stack = new ArrayDeque<>();
 
-
     @Override
     public void push(T value) {
         stack.push(value);
@@ -27,5 +26,15 @@ public class HANStack<T> implements IHANStack<T> {
             throw new NoSuchElementException("Empty stack");
         }
         return stack.peek();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return stack.isEmpty();
+    }
+
+    @Override
+    public int size() {
+        return stack.size();
     }
 }

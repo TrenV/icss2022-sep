@@ -74,8 +74,11 @@ property
  ;
 
 expr
- : literal
- | variableReference
+ : expr MUL expr        # MulExpr
+ | expr PLUS expr       # AddExpr
+ | expr MIN expr        # SubExpr
+ | literal              # LiteralExpr
+ | variableReference    # VarReferenceExpr
  ;
 
  variableAssignment
@@ -92,4 +95,5 @@ literal
  | PERCENTAGE
  | TRUE
  | FALSE
+ | SCALAR
  ;

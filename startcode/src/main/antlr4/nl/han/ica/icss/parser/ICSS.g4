@@ -47,11 +47,16 @@ ASSIGNMENT_OPERATOR: ':=';
 //--- PARSER: ---
 
 stylesheet
- : stylerule* EOF
+ : (variableAssignment | stylerule)* EOF
  ;
 
 stylerule
- : selector OPEN_BRACE declaration* CLOSE_BRACE
+ : selector OPEN_BRACE statement* CLOSE_BRACE
+ ;
+
+ statement
+ : declaration
+ | variableAssignment
  ;
 
 selector
@@ -70,10 +75,21 @@ property
 
 expr
  : literal
+ | variableReference
  ;
+
+ variableAssignment
+ : CAPITAL_IDENT ASSIGNMENT_OPERATOR expr SEMICOLON
+ ;
+
+variableReference
+: CAPITAL_IDENT
+;
 
 literal
  : COLOR
  | PIXELSIZE
  | PERCENTAGE
+ | TRUE
+ | FALSE
  ;

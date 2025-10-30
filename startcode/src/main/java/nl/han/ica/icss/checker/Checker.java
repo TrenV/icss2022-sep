@@ -15,7 +15,7 @@ public class Checker {
 
     public void check(AST ast) {
         variableTypes = new HANLinkedList<>();
-        variableTypes.insert(0, new HashMap<>()); // globale scope
+        variableTypes.insert(0, new HashMap<>());
         checkStylesheet(ast.root);
     }
 

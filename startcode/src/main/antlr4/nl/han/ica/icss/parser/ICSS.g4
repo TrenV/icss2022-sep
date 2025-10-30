@@ -57,6 +57,7 @@ stylerule
  statement
  : declaration
  | variableAssignment
+ | ifClause
  ;
 
 selector
@@ -97,3 +98,16 @@ literal
  | FALSE
  | SCALAR
  ;
+
+ ifClause
+    : IF BOX_BRACKET_OPEN expr BOX_BRACKET_CLOSE OPEN_BRACE body CLOSE_BRACE elseClause?
+    ;
+
+ elseClause
+    : ELSE OPEN_BRACE body CLOSE_BRACE
+    ;
+
+ body
+ : statement*
+ ;
+

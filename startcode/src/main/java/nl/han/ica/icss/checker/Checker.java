@@ -72,9 +72,17 @@ public class Checker {
         ExpressionType type = getExpressionType(assignment.expression);
         if (type == ExpressionType.UNDEFINED) {
             assignment.setError("Ongeldige waarde voor variabele " + assignment.name.name);
-        } else {
-            variableTypes.getFirst().put(assignment.name.name, type);
+            return;
         }
+
+        HashMap<String, ExpressionType> currentScope = variableTypes.getFirst();
+        ExpressionType existing = currentScope.get(assignment.name.name);
+        if (existing != null && existing != type) {
+            assignment.setError("Variabele " + assignment.name.name + " verandert van type (" + existing + " → " + type + ")");
+            return;
+        }
+
+        currentScope.put(assignment.name.name, type);
     }
 
     private void checkDeclaration(Declaration declaration) {
